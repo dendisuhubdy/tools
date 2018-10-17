@@ -797,7 +797,7 @@ def lpc_analysis(X, order=8, window_step=128, window_size=2 * 128,
     for window in range(max(n_windows - 1, 1)):
         wtws = int(window * window_step)
         XX = X.ravel()[wtws + np.arange(window_size, dtype="int32")]
-        WXX = XX * sg.hanning(window_size)
+        WXX = XX * sg.windows.hann(window_size)
         autocorr_X[window] = np.correlate(WXX, WXX, mode='full')
         center = np.argmax(autocorr_X[window])
         RXX = autocorr_X[window,
@@ -984,7 +984,7 @@ def lpc_synthesis(lp_coefficients, per_frame_gain, residual_excitation=None,
         residual_excitation = np.zeros((n_excitation_points))
         f, m = lpc_to_frequency(lp_coefficients, per_frame_gain)
         t = np.linspace(0, 1, window_size, endpoint=False)
-        hanning = sg.hanning(window_size)
+        hanning = sg.windows.hann(window_size)
         for window in range(n_windows):
             window_base = window * window_step
             index = window_base + np.arange(window_size)
@@ -1019,7 +1019,7 @@ def lpc_synthesis(lp_coefficients, per_frame_gain, residual_excitation=None,
                                       residual_excitation[index])
         synthesized[index] = np.hstack((oldbit, np.zeros(
             (window_size - window_step))))
-        synthesized[index] += sg.hanning(window_size) * newbit
+        synthesized[index] += sg.windows.hann(window_size) * newbit
     synthesized = sg.lfilter([1], [1, -emphasis], synthesized)
     return synthesized
 
@@ -1176,7 +1176,7 @@ def sinusoid_analysis(X, input_sample_rate, resample_block=128, copy=True):
             raise ValueError("Input sample rate must be a multiple of 8k!")
         # Should be able to use resample... ?
         # resampled_count = round(len(X) * resample_to / input_sample_rate)
-        # X = sg.resample(X, resampled_count, window=sg.hanning(len(X)))
+        # X = sg.resample(X, resampled_count, window=sg.windows.hann(len(X)))
         X = sg.decimate(X, input_sample_rate // resample_to, zero_phase=True)
     step_size = 2 * round(resample_block / input_sample_rate * resample_to / 2.)
     a, g, e = lpc_analysis(X, order=8, window_step=step_size,
